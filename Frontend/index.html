@@ -10,7 +10,16 @@
     <div class="app-shell">
       <header>
         <div class="brand">Complaint Registration Portal</div>
-        <nav id="top-nav"></nav>
+        <div class="top-controls">
+          <div class="backend-switcher">
+            <label for="backend-select">Backend</label>
+            <select id="backend-select" onchange="window.app.setApiHost(this.value)">
+              <option value="local">Localhost</option>
+              <option value="render">Render</option>
+            </select>
+          </div>
+          <nav id="top-nav"></nav>
+        </div>
       </header>
 
       <main id="app"></main>

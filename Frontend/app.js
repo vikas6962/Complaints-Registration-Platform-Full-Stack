@@ -1,4 +1,15 @@
-const API_BASE = 'http://localhost:3000/api';
+const API_HOSTS = {
+  local: 'http://localhost:3000/api',
+  render: 'https://complaints-registration-platform-full-bbke.onrender.com/api',
+};
+
+const API_HOST_STORAGE_KEY = 'backendApiHost';
+let currentApiHost = localStorage.getItem(API_HOST_STORAGE_KEY) || 'local';
+if (!API_HOSTS[currentApiHost]) {
+  currentApiHost = 'local';
+}
+
+const API_BASE = () => API_HOSTS[currentApiHost];
 
 const state = {
   user: null,
@@ -20,13 +31,17 @@ window.addEventListener('DOMContentLoaded', init);
 window.addEventListener('hashchange', renderRoute);
 
 async function init() {
+  const backendSelect = document.getElementById('backend-select');
+  if (backendSelect) {
+    backendSelect.value = currentApiHost;
+  }
   await refreshSession();
   renderRoute();
 }
 
 async function refreshSession() {
   try {
-    const response = await fetch(`${API_BASE}/auth/me`, {
+    const response = await fetch(`${API_BASE()}/auth/me`, {
       credentials: 'include',
     });
 
@@ -80,7 +95,7 @@ function renderNav() {
     .join(' ');
 }
 
-window.app = { logout };
+window.app = { logout, setApiHost };
 
 function renderRoute() {
   renderNav();
@@ -268,6 +283,17 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
+function setApiHost(host) {
+  if (!API_HOSTS[host]) return;
+  currentApiHost = host;
+  localStorage.setItem(API_HOST_STORAGE_KEY, host);
+  const backendSelect = document.getElementById('backend-select');
+  if (backendSelect) {
+    backendSelect.value = host;
+  }
+  setSuccess(`Backend switched to ${host === 'local' ? 'Localhost' : 'Render'}.`);
+}
+
 window.app.login = async function login() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
@@ -276,7 +302,7 @@ window.app.login = async function login() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
+    const response = await fetch(`${API_BASE()}/auth/login`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -303,7 +329,7 @@ window.app.sendOtp = async function sendOtp() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/send-otp`, {
+    const response = await fetch(`${API_BASE()}/auth/send-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email }),
@@ -335,7 +361,7 @@ window.app.verifyOtpAndRegister = async function verifyOtpAndRegister() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/auth/register`, {
+    const response = await fetch(`${API_BASE()}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: state.registerData.email, otp, password }),
@@ -363,7 +389,7 @@ window.app.getAiQuestion = async function getAiQuestion() {
   state.complaintText = complaintText;
 
   try {
-    const response = await fetch(`${API_BASE}/ai/question`, {
+    const response = await fetch(`${API_BASE()}/ai/question`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -389,7 +415,7 @@ window.app.submitComplaint = async function submitComplaint() {
   }
 
   try {
-    const response = await fetch(`${API_BASE}/complaints`, {
+    const response = await fetch(`${API_BASE()}/complaints`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -413,7 +439,7 @@ window.app.submitComplaint = async function submitComplaint() {
 
 async function loadComplaints() {
   try {
-    const response = await fetch(`${API_BASE}/complaints/my`, {
+    const response = await fetch(`${API_BASE()}/complaints/my`, {
       credentials: 'include',
     });
     if (!response.ok) {
@@ -427,7 +453,7 @@ async function loadComplaints() {
 
 async function loadAdminComplaints() {
   try {
-    const response = await fetch(`${API_BASE}/admin/complaints`, {
+    const response = await fetch(`${API_BASE()}/admin/complaints`, {
       credentials: 'include',
     });
     if (!response.ok) {
@@ -443,7 +469,7 @@ async function loadAdminComplaints() {
 
 async function logout() {
   try {
-    await fetch(`${API_BASE}/auth/logout`, {
+    await fetch(`${API_BASE()}/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     });
