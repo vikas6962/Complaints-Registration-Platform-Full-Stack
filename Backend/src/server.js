@@ -26,6 +26,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+app.get('/', (req, res) => {
+  res.send('Complaint Registration backend is running. Use /api/auth, /api/ai/question, /api/complaints or /api/admin/complaints.');
+});
+
 function createSessionToken(user) {
   return jwt.sign(
     {
